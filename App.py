@@ -5,7 +5,7 @@ from PIL import Image
 
 # Hugging Face API endpoint and token
 API_URL = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
-API_TOKEN = "HF_TOKEN"   # replace with your token
+API_TOKEN = "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"   # replace with your token
 
 headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
