@@ -1,40 +1,32 @@
 import streamlit as st
-from transformers import pipeline
+import requests
+from io import BytesIO
 from PIL import Image
 
-# Load the text-to-image pipeline
-@st.cache_resource
-def load_text2image():
-    # Use a model that supports text-to-image via transformers
-    return pipeline("text-to-image", model="runwayml/stable-diffusion-v1-5")
+# Hugging Face API endpoint and token
+API_URL = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
+API_TOKEN = "HF_TOKEN"   # replace with your token
 
-generator = load_text2image()
+headers = {"Authorization": f"Bearer {API_TOKEN}"}
 
-# Streamlit UI
 st.title("🎨 AI Text-to-Image Generator")
 st.write("Enter a text prompt below, and generate an image!")
 
 # Text Input
 prompt = st.text_area("Enter your image prompt:", height=200)
 
-# Parameters
-num_images = st.slider("Number of Images", min_value=1, max_value=3, value=1)
-guidance_scale = st.slider("Guidance Scale", min_value=1.0, max_value=15.0, value=7.5)
-
 # Generate Button
 if st.button("Generate Image"):
     if prompt.strip():
         with st.spinner("Generating image... ⏳"):
-            images = generator(
-                prompt,
-                num_images_per_prompt=num_images,
-                guidance_scale=guidance_scale
-            )
-            st.subheader("🖼️ Generated Image(s):")
-            for i, img in enumerate(images):
-                if isinstance(img, Image.Image):
-                    st.image(img, caption=f"Image {i+1}")
-                else:
-                    st.error("Unexpected output format from pipeline.")
+            response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
+
+            if response.status_code == 200:
+                # Hugging Face returns raw image bytes for diffusion models
+                image = Image.open(BytesIO(response.content))
+                st.subheader("🖼️ Generated Image:")
+                st.image(image, caption="Generated from your prompt")
+            else:
+                st.error(f"API error: {response.text}")
     else:
         st.warning("⚠️ Please enter a text prompt.")
