@@ -1,5 +1,8 @@
+requirements.txt
 streamlit
-transformers==4.57.5
+diffusers
+transformers
 torch
 accelerate
-torchvision
+safetensors
+Pillow
