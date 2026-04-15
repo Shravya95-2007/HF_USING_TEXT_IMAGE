@@ -1,21 +1,33 @@
 import streamlit as st
 import requests
+import base64
 
-st.title("🎨 Text-to-Image Generator (API-based)")
-st.write("Generate images from text prompts using Hugging Face Inference API")
+st.title("🎨 AI Text-to-Image Generator")
+st.write("Enter a text prompt below, and generate an image!")
 
-prompt = st.text_area("Enter your image prompt:", height=100)
+# Text Input
+prompt = st.text_area("Enter your image prompt:", height=200)
 
+# Button
 if st.button("Generate Image"):
     if prompt.strip():
-        with st.spinner("Calling API... ⏳"):
+        with st.spinner("Generating image... ⏳"):
             response = requests.post(
                 "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5",
-                headers={"Authorization": f"Bearer YOUR_HF_API_TOKEN"},
+                headers={"Authorization": f"baidu/ERNIE-Image-Turbo"},
                 json={"inputs": prompt}
             )
+
             if response.status_code == 200:
-                st.image(response.content, caption="Generated from your prompt")
+                result = response.json()
+                # Hugging Face returns a list with base64 image(s)
+                if isinstance(result, list) and "generated_image" in result[0]:
+                    image_base64 = result[0]["generated_image"]
+                    image_bytes = base64.b64decode(image_base64)
+                    st.subheader("🖼️ Generated Image:")
+                    st.image(image_bytes, caption="Generated from your prompt")
+                else:
+                    st.error("Unexpected API response format.")
             else:
                 st.error(f"API error: {response.text}")
     else:
