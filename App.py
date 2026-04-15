@@ -5,7 +5,8 @@ from PIL import Image
 # Load the text-to-image pipeline
 @st.cache_resource
 def load_text2image():
-    return pipeline("text-to-image", model="baidu/ERNIE-Image-Turbo")
+    # Use a model that supports text-to-image via transformers
+    return pipeline("text-to-image", model="runwayml/stable-diffusion-v1-5")
 
 generator = load_text2image()
 
@@ -16,7 +17,7 @@ st.write("Enter a text prompt below, and generate an image!")
 # Text Input
 prompt = st.text_area("Enter your image prompt:", height=200)
 
-# Image Parameters
+# Parameters
 num_images = st.slider("Number of Images", min_value=1, max_value=3, value=1)
 guidance_scale = st.slider("Guidance Scale", min_value=1.0, max_value=15.0, value=7.5)
 
