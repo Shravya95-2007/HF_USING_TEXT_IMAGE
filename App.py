@@ -1,26 +1,30 @@
 import streamlit as st
-import requests
-import os
-from io import BytesIO
-from PIL import Image
+from diffusers import StableDiffusionPipeline
+import torch
 
-API_URL = "https://api-inference.huggingface.co/models/runwayml/stable-diffusion-v1-5"
-API_TOKEN = os.getenv("HF_TOKEN")  # read from environment variable
+st.title("🖼️ Text to Image Generator")
 
-headers = {"Authorization": f"Bearer {API_TOKEN}"}
+@st.cache_resource
+def load_model():
+    model_id = "runwayml/stable-diffusion-v1-5"
+    
+    pipe = StableDiffusionPipeline.from_pretrained(model_id)
+    
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    pipe = pipe.to(device)
+    
+    return pipe
 
-st.title("🎨 AI Text-to-Image Generator")
-prompt = st.text_area("Enter your image prompt:", height=200)
+prompt = st.text_input("Enter your prompt:")
 
 if st.button("Generate Image"):
-    if prompt.strip():
-        with st.spinner("Calling Hugging Face API... ⏳"):
-            response = requests.post(API_URL, headers=headers, json={"inputs": prompt})
-
-            if response.status_code == 200:
-                image = Image.open(BytesIO(response.content))
-                st.image(image, caption="Generated from your prompt")
-            else:
-                st.error(f"API error: {response.text}")
+    if prompt:
+        try:
+            pipe = load_model()
+            with st.spinner("Generating image... (may take time ⏳)"):
+                image = pipe(prompt, num_inference_steps=20).images[0]
+                st.image(image)
+        except Exception as e:
+            st.error(f"Error: {e}")
     else:
-        st.warning("⚠️ Please enter a text prompt.")
+        st.warning("Enter a prompt!")
