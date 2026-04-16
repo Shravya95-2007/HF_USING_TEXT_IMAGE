@@ -1,30 +1,30 @@
+%%writefile app.py
 import streamlit as st
 from diffusers import StableDiffusionPipeline
 import torch
 
-st.title("🖼️ Text to Image Generator")
-
+# Load model (uses GPU) - This should ideally be cached or loaded once
 @st.cache_resource
 def load_model():
     model_id = "runwayml/stable-diffusion-v1-5"
-    
-    pipe = StableDiffusionPipeline.from_pretrained(model_id)
-    
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    pipe = pipe.to(device)
-    
+    pipe = StableDiffusionPipeline.from_pretrained(
+        model_id,
+        torch_dtype=torch.float16
+    )
+    pipe = pipe.to("cuda")
     return pipe
 
-prompt = st.text_input("Enter your prompt:")
+pipe = load_model()
+
+st.title("Stable Diffusion Image Generator")
+
+prompt = st.text_input("Enter your image prompt:", "a photograph of an astronaut riding a horse")
 
 if st.button("Generate Image"):
     if prompt:
-        try:
-            pipe = load_model()
-            with st.spinner("Generating image... (may take time ⏳)"):
-                image = pipe(prompt, num_inference_steps=20).images[0]
-                st.image(image)
-        except Exception as e:
-            st.error(f"Error: {e}")
+        with st.spinner("Generating image..."):
+            # Generate image
+            image = pipe(prompt, num_inference_steps=20).images[0]
+            st.image(image, caption=prompt)
     else:
-        st.warning("Enter a prompt!")
+        st.warning("Please enter a prompt.")
